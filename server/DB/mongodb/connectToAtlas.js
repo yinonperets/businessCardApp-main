@@ -7,11 +7,9 @@ const password = config.get("DB_PASSWORD");
 
 mongoose
   .connect(
-    `mongodb://localhost:27017/yp_businness_card_app`
+    `mongodb://localhost:27017/${userName}:${password}`
   )
   .then(() => console.log(chalk.magentaBright("connected to MongoDb Locally!")))
   .catch((error) =>
     console.log(chalk.redBright.bold(`could not connect to mongoDb: ${error}`))
   );
-
-  

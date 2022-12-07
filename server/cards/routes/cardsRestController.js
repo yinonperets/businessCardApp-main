@@ -10,6 +10,8 @@ const {
   updateCard,
   likeCard,
   deleteCard,
+  getMyLikesCards,
+  updateBizNumber,
 } = require("../models/cardsAccessDataService");
 const validateCard = require("../validations/cardValidationService");
 const router = express.Router();
@@ -35,10 +37,11 @@ router.get("/my-cards", auth, async (req, res) => {
   }
 });
 
-router.get('/mylikes', auth, async(req,res)=>{
+// //
+router.get('/my-Likes', auth, async(req,res)=>{
 const user = req.user;
 try {
-  const card = await likeCard(user._id);
+  const card = await getMyLikesCards(user._id);
   return res.send(card);
 } catch (error) {
   return handleError(res, error.status || 500, error.message);
@@ -73,30 +76,28 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-router.put("/:id", auth, async (req, res) => {
-  try {
-    const rawCard = req.body;
-    const { id } = req.params;
-    const user = req.user;
-    if (user._id !== rawCard.userId)
-      return handleError(
-        res,
-        403,
-        "Authorization Error: Only an admin or the user who created the business card can update its details"
-      );
-
-    const card = await updateCard(id, rawCard);
-    return res.send(card);
-  } catch (error) {
-    const { status } = error;
-    return handleError(res, status || 500, error.message);
-  }
+router.put('/:id', auth, async (req, res) => {
+    try {
+        let card = req.body;
+        const cardId = req.params.id;
+        const authUser = req.user;
+        if(!authUser.isBusiness) throw new Error('You are not Business User!');
+        const { error } = validateCard(card);
+        if (error)
+          return handleError(res, 400, `Joi Error: ${error.details[0].message}`);
+    
+        card = await normalizeCard(card, authUser._id);
+        card = await updateCard(cardId, card, authUser._id);
+        return res.send(card);
+      } catch (error) {
+        return handleError(res, error.status || 500, error.message);
+      }
 });
 
-router.patch('/update-biz-number/:id', auth, async (req, res) => {
+router.patch('/update-biznumber/:id', auth, async (req, res) => {
     try {
         const id = req.params.id;
-        const bizNumber = req.body.bizNumber;
+        const { bizNumber } = req.body;
         if(!req.user.isAdmin) throw new Error('You are not Authorized');
         const card = await updateBizNumber(id, bizNumber);
         return res.send(card);
@@ -119,7 +120,6 @@ router.patch('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
     const id = req.params.id;
     const user = req.user;
-
     try {
         const card = await deleteCard(id, user);
         return res.send(card);
@@ -130,4 +130,3 @@ router.delete('/:id', auth, async (req, res) => {
  
 module.exports = router;
 
-module.exports = router;

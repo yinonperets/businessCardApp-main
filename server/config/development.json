@@ -2,8 +2,8 @@
   "NODE_ENV": "development",
   "PORT": 8181,
   "TOKEN_GENERATOR": "jwt",
-  "DB_NAME": "yinon",
-  "DB_PASSWORD": "Yinon1995y",
+  "DB_NAME": null,
+  "DB_PASSWORD": null,
   "LOGGER": "morgan",
   "DB": "MONGODB"
 }

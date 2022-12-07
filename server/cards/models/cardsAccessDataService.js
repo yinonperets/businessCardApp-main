@@ -1,7 +1,9 @@
 const Card = require("./mongodb/Card");
 const { handleBadRequest } = require("../../utils/handleErrors");
+const {cardSchema} = require('../models/mongodb/Card')
+const config = require('config');
+const DB = config.get("DB");
 
-const DB = process.env.DB || "MONGODB";
 
 const getCards = async () => {
   if (DB === "MONGODB") {
@@ -119,6 +121,34 @@ const deleteCard = async (cardId, user) => {
   return Promise.resolve("card deleted not in mongodb");
 };
 
+const getMyLikesCards = async (userId) => {
+    if(DB === 'MONGODB'){
+        try {
+            const getCard = mongoose.model('card', cardSchema);
+            const userLikes = await getCard.find({likes: {"$in": [userId]}});
+            return Promise.resolve(userLikes);
+        } catch (error) {
+            error.status = 404;
+            return Promise.reject(error);
+        }
+    }
+};
+
+const updateBizNumber = async (id, bizNumber) => {
+    if(DB === 'MONGODB'){
+        try {
+            const updateCard = mongoose.model('card', cardSchema);
+            let bizCard = await updateCard.findOne({bizNumber: bizNumber});
+            if(bizCard) throw new Error('This Biz Number is already exists');
+            bizCard = await updateCard.findByIdAndUpdate(id, {bizNumber: bizNumber}, {new: true});
+            return Promise.resolve(bizCard);
+        } catch (error) {
+            error.status = 404;
+            return Promise.reject(error);
+        }
+    }
+}
+
 exports.getCards = getCards;
 exports.getMyCards = getMyCards;
 exports.getCard = getCard;
@@ -126,3 +156,5 @@ exports.createCard = createCard;
 exports.updateCard = updateCard;
 exports.likeCard = likeCard;
 exports.deleteCard = deleteCard;
+exports.getMyLikesCards = getMyLikesCards;
+exports.updateBizNumber = updateBizNumber;
